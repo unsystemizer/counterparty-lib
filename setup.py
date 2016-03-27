@@ -13,51 +13,6 @@ from counterpartylib.lib import config
 
 CURRENT_VERSION = config.VERSION_STRING
 
-# NOTE: Why we don’t use the the PyPi package:
-# <https://code.google.com/p/apsw/source/detail?r=358a9623d051>
-class install_apsw(Command):
-    description = "Install APSW 3.8.7.3-r1 with the appropriate version of SQLite"
-    user_options = []
-
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        # In Windows APSW should be installed manually
-        if os.name == 'nt':
-            print('To complete the installation you have to install APSW: https://github.com/rogerbinns/apsw/releases');
-            return
-
-        try:
-            import apsw
-            return
-        except:
-            pass
-
-        print("downloading apsw.")
-        urllib.request.urlretrieve('https://github.com/rogerbinns/apsw/archive/3.8.7.3-r1.zip', 'apsw-3.8.7.3-r1.zip')
-
-        print("extracting.")
-        with zipfile.ZipFile('apsw-3.8.7.3-r1.zip', 'r') as zip_file:
-            zip_file.extractall()
-
-        executable = sys.executable
-        if executable is None:
-            executable = "python"
-
-        print("install apsw.")
-        install_command = ('cd apsw-3.8.7.3-r1 && {executable} '
-          'setup.py fetch --version=3.8.7.3 --all build '
-          '--enable-all-extensions install'.format(executable=executable)
-        )
-        os.system(install_command)
-
-        print("clean files.")
-        shutil.rmtree('apsw-3.8.7.3-r1')
-        os.remove('apsw-3.8.7.3-r1.zip')
-
 class install_serpent(Command):
     description = "Install Ethereum Serpent"
     user_options = []
@@ -126,7 +81,6 @@ class move_old_db(Command):
                         shutil.copy(src_file, dest_file)
 
 def post_install(cmd, install_serpent=False):
-    cmd.run_command('install_apsw')
     if install_serpent:
         cmd.run_command('install_serpent')
     cmd.run_command('move_old_db')
@@ -190,6 +144,7 @@ class bdist_egg(_bdist_egg):
 
 required_packages = [
     'appdirs',
+    'apsw',
     'python-dateutil',
     'Flask-HTTPAuth',
     'Flask',
@@ -240,7 +195,6 @@ setup_options = {
     'cmdclass': {
         'install': install,
         'move_old_db': move_old_db,
-        'install_apsw': install_apsw,
         'install_serpent': install_serpent
     }
 }
